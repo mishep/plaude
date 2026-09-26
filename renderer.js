@@ -13,7 +13,13 @@ term.focus();
 
 // Plain browser WebSocket — no Electron-specific API. This same code runs
 // unmodified in a real browser tab once the daemon is reachable over the network.
-const socket = new WebSocket(`ws://localhost:4317`);
+// The daemon rejects connections without the per-launch token, which arrives in our #fragment.
+const token = new URLSearchParams(location.hash.slice(1)).get('token') || '';
+const socket = new WebSocket(`ws://localhost:4317/?token=${encodeURIComponent(token)}`);
+
+socket.addEventListener('close', (event) => {
+  if (event.code === 1006) term.write('\r\n[could not connect: is the daemon running, and did you open the URL it printed (with #token=...)?]\r\n');
+});
 
 socket.addEventListener('open', () => {
   syncSize();

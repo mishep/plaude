@@ -8,11 +8,11 @@ const { pathToFileURL } = require('url');
 const { WebSocketServer } = require('ws');
 const pty = require('node-pty');
 
-const PORT = process.env.CLAUDE_GUI_DAEMON_PORT || 4317;
+const PORT = process.env.PLAUDE_DAEMON_PORT || 4317;
 
 // Shared secret for this run. Electron passes one in; when started by hand we mint our own.
 // Anything that can reach this port gets a shell, so every connection must present it.
-const TOKEN = process.env.CLAUDE_GUI_TOKEN || crypto.randomBytes(32).toString('hex');
+const TOKEN = process.env.PLAUDE_TOKEN || crypto.randomBytes(32).toString('hex');
 
 // Browsers stamp every WebSocket handshake with the page's Origin and scripts can't forge it.
 // Our page is loaded from disk: Electron reports 'file://', Chrome reports 'null'.
@@ -84,8 +84,8 @@ wss.on('connection', (ws) => {
 
 server.listen(PORT, '127.0.0.1', () => {
   // Signal readiness on stdout for whoever spawned this (e.g. Electron main process).
-  console.log(`claude-gui-daemon listening on ${PORT}`);
-  if (!process.env.CLAUDE_GUI_TOKEN) {
+  console.log(`plaude-daemon listening on ${PORT}`);
+  if (!process.env.PLAUDE_TOKEN) {
     // Started by hand (no Electron): print the one URL that can connect. The token rides in the
     // #fragment, which browsers never send over the network or in Referer headers.
     const page = pathToFileURL(path.join(__dirname, 'index.html'));

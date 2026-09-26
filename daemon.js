@@ -10,6 +10,10 @@ const pty = require('node-pty');
 
 const PORT = process.env.PLAUDE_DAEMON_PORT || 4317;
 
+// Which program to run in the pty. Nothing downstream cares — any interactive terminal
+// program works. Set only by whoever starts the daemon, never by a connecting client.
+const COMMAND = process.env.PLAUDE_COMMAND || 'claude';
+
 // Shared secret for this run. Electron passes one in; when started by hand we mint our own.
 // Anything that can reach this port gets a shell, so every connection must present it.
 const TOKEN = process.env.PLAUDE_TOKEN || crypto.randomBytes(32).toString('hex');
@@ -45,7 +49,7 @@ const wss = new WebSocketServer({
 
 wss.on('connection', (ws) => {
   const shell = process.platform === 'win32' ? 'powershell.exe' : (process.env.SHELL || '/bin/zsh');
-  const args = process.platform === 'win32' ? [] : ['-lc', 'claude'];
+  const args = process.platform === 'win32' ? [] : ['-lc', COMMAND];
 
   const ptyProcess = pty.spawn(shell, args, {
     name: 'xterm-256color',
@@ -84,7 +88,7 @@ wss.on('connection', (ws) => {
 
 server.listen(PORT, '127.0.0.1', () => {
   // Signal readiness on stdout for whoever spawned this (e.g. Electron main process).
-  console.log(`plaude-daemon listening on ${PORT}`);
+  console.log(`plaude-daemon listening on ${PORT} (running: ${COMMAND})`);
   if (!process.env.PLAUDE_TOKEN) {
     // Started by hand (no Electron): print the one URL that can connect. The token rides in the
     // #fragment, which browsers never send over the network or in Referer headers.

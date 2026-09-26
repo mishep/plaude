@@ -224,6 +224,24 @@ Everything stays on your computer, so the whole round trip takes a few milliseco
 
 The page measures how many columns and rows of characters now fit, sends `{"t":"r","cols":…,"rows":…}`, and the daemon resizes the pseudoterminal. `claude` gets notified and redraws its layout to fit.
 
+### Try it: swap the program
+
+Only the program at the very end of the pipe is about Claude. The pseudoterminal, WebSocket, daemon, xterm.js and security checks would carry *any* interactive terminal program. You can see this for yourself: the `PLAUDE_COMMAND` setting chooses what runs.
+
+```bash
+PLAUDE_COMMAND=htop npm start      # live view of your computer's processes
+PLAUDE_COMMAND=python3 npm start   # a Python prompt
+PLAUDE_COMMAND=vim npm start       # a full-screen text editor
+PLAUDE_COMMAND=zsh npm start       # your shell, making Plaude a general web terminal
+npm start                          # the default: claude
+```
+
+Colors, full-screen redraws and resizing all keep working, with nothing else changed.
+
+**The security lesson hiding in here:** whoever chooses the program controls your computer. That's why the choice is a setting given to the daemon **when it starts**. A connecting page can never pick it, and the daemon only accepts connections that pass the Origin and token checks.
+
+**Why a to-do app wouldn't fit this pipe:** the pseudoterminal and xterm.js are a matched pair that both speak "terminal" (characters plus screen-drawing codes). An app that deals in structured data, like a to-do list, would replace *both* ends: routes and JSON instead of a pseudoterminal, and buttons and forms instead of a terminal display. That's the kind of app the cloud server is growing into.
+
 ---
 
 ## The journey so far and what's next
@@ -254,7 +272,7 @@ npm install        # installs packages and builds node-pty for Electron
 npm start          # opens the Plaude window
 ```
 
-**In a browser tab instead:** run `node daemon.js`. It prints a `file://…#token=…` address. Paste that into Chrome.
+**In a browser tab instead:** run `node daemon.js` (or `PLAUDE_COMMAND=htop node daemon.js`). It prints a `file://…#token=…` address. Paste that into Chrome.
 
 **The cloud server locally:** `cd server && npm install && npm start`, then visit `http://localhost:8080/health`.
 
